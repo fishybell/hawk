@@ -3,6 +3,7 @@ package hawk
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"net/url"
@@ -12,12 +13,12 @@ import (
 )
 
 type Server struct {
-	CredentialStore  CredentialStore
-	NonceValidator   NonceValidator
-	TimeStampSkew    time.Duration
-	LocaltimeOffset  time.Duration
-	Payload          string
-	AuthOption       *AuthOption
+	CredentialStore CredentialStore
+	NonceValidator  NonceValidator
+	TimeStampSkew   time.Duration
+	LocaltimeOffset time.Duration
+	Payload         string
+	AuthOption      *AuthOption
 }
 
 type AuthOption struct {
@@ -111,6 +112,20 @@ func (s *Server) Authenticate(req *http.Request) (*Credential, error) {
 		Option:     artifacts,
 	}
 	mac, err := m.String()
+
+	msg1 := fmt.Sprintf("Incoming MAC: %s; MAC: %s; Type: %d; Credential: %s, %s; Uri: %s; Method: %s; HostPort: %s;", authzAttributes["mac"], mac, Header, cred.ID, cred.Key, uri, req.Method, host)
+	msg2 := fmt.Sprintf("artifacts.TimeStamp: %d; artifacts.Nonce: %s; artifacts.Payload: %s; artifacts.ContentType: %s; artifacts.Hash: %s; artifacts.Ext: %s; artifacts.App: %s; artifacts.Dlg: %s;",
+		artifacts.TimeStamp,
+		artifacts.Nonce,
+		artifacts.Payload,
+		artifacts.ContentType,
+		artifacts.Hash,
+		artifacts.Ext,
+		artifacts.App,
+		artifacts.Dlg)
+
+	fmt.Println(msg1, msg2)
+
 	if err != nil {
 		//FIXME: logging error
 		return nil, errors.New("Failed to calculate MAC.")
